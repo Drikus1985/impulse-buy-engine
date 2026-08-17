@@ -47,6 +47,8 @@ Requires Node 18+.
 
 `ICE_DATA_DIR` is optional and defaults to `~/.impulse-commerce-mcp`. The ledger is `database.json`; exported reports and launch cards land in `reports/`. Writes are atomic (temp file + rename), so an interrupted write cannot corrupt the ledger.
 
+Step-by-step instructions for Claude Code and Claude Desktop, including troubleshooting, are in [docs/SETUP.md](docs/SETUP.md).
+
 ## The 24 tools
 
 **Orientation**
