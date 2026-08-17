@@ -1,0 +1,32 @@
+{
+  "name": "impulse-commerce-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for the Global Impulse-Commerce Opportunity Engine: a persistent research ledger with deterministic scoring, unit-economics, evidence and compliance gates.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "impulse-commerce-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "node test/smoke.mjs",
+    "seed:eval": "node test/seed-eval-ledger.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
+  }
+}
