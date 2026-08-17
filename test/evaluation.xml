@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Evaluation set for impulse-commerce-mcp-server.
+
+  Run against the seeded fixture ledger:
+      node test/seed-eval-ledger.mjs
+      ICE_DATA_DIR=./test/fixtures/eval-ledger node dist/index.js
+
+  All data in that ledger is SYNTHETIC and exists only to exercise the tools.
+  Every answer below was verified by actually calling the tools against the
+  fixture, not predicted. All questions are read-only: none require a tool that
+  mutates the ledger (note that ice_select_portfolio writes product statuses and
+  is therefore excluded).
+-->
+<evaluation>
+  <qa_pair>
+    <question>Exactly one product in the ledger passes every launch gate — score threshold, evidence, suppliers, compliance and unit economics. What is that product's break-even ROAS?</question>
+    <answer>1.79</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>One product scores above 80 out of 100 but is still not launch ready, and it is blocked by exactly one gate. Expressed as a percentage to one decimal place, what is that product's pre-ad contribution margin?</question>
+    <answer>44.5</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Only one of the three categories fails its evidence gate. What is the name of that category?</question>
+    <answer>Pet grooming and hair control</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>One product carries a compliance verdict of EXCLUDE. What is its name?</question>
+    <answer>car footwell ambient light strip</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>South Africa is recorded as the beachhead market, but it does not have the highest market score. Which market scores highest?</question>
+    <answer>United Kingdom</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Ignoring any product whose compliance verdict is EXCLUDE, exactly one remaining product breaches the 30% landed-cost screening threshold against its net selling price. Expressed as a percentage to one decimal place, what is that product's landed cost ratio?</question>
+    <answer>39.5</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>For the magnetic car vent phone mount, one supplier claims certifications but has not been independently verified. What is that supplier's name?</question>
+    <answer>Dongguan MagMount Factory</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Take the only product that currently passes every launch gate and run the default downside scenario against its stored base case. What is its pre-ad contribution in that downside scenario?</question>
+    <answer>147.9</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Two products fail the product-level evidence gate. One of them fails because its only recorded demand signal is supplier-controlled. What is that product's name?</question>
+    <answer>braided cable sleeve wrap</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>One product has a negative target CAC, meaning its required profit per order exceeds its entire pre-ad contribution. What is that product's target CAC?</question>
+    <answer>-2.61</answer>
+  </qa_pair>
+</evaluation>
