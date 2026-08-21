@@ -28,3 +28,29 @@ jobs:
 
       - name: Smoke test
         run: npm test
+
+  shop-app:
+    runs-on: ubuntu-latest
+    name: Shop app
+    defaults:
+      run:
+        working-directory: army-navy-fittings-app
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 only: the app's tests run TypeScript through
+      # --experimental-strip-types, which needs 22.6+, and Vite 7 needs 22.12+.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: army-navy-fittings-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test

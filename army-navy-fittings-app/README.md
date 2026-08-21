@@ -21,6 +21,9 @@ car or in a workshop, not at a desk.
 
 ## Quick start
 
+Needs Node 22.6 or newer — the tests run TypeScript through Node's own type
+stripping, and Vite 7 wants 22.12+.
+
 ```bash
 npm install
 npm run icons          # draws the app icons
@@ -96,7 +99,7 @@ public/
 ## Tests
 
 ```bash
-npm test     # 53 assertions
+npm test     # 54 assertions
 ```
 
 They cover the parts where a mistake costs money or sells the wrong fitting: VAT arithmetic in whole cents,
