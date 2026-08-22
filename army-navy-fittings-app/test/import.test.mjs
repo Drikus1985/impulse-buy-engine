@@ -260,6 +260,52 @@ test('records parts that sell at or below landed cost', () => {
   assert.ok(!('cost' in catalogue.products['0']), 'no cost field ever reaches the catalogue');
 });
 
+test('the below-cost report carries enough to act on, worst first', () => {
+  const { catalogue, report } = buildCatalogue(
+    csv(
+      // 20 on the shelf, R7.21 given away on each
+      'ANFHC-100-121,,,,Hose Clamp,Clamp,20,EA,22.00,14.79,,,ANF-01,ACTIVE,',
+      // a far worse margin, but only one in stock
+      'AMTEC-1207,,,,Semi Synthetic 10W40,Lubricant/Fluid,1,EA,1137.40,113.03,,,ANF-02,ACTIVE,',
+      // healthy margin — must not appear at all
+      'ANF-OK,,,,Fine part,Adapter,5,EA,10,50,,,ANF-03,ACTIVE,',
+    ),
+  );
+
+  assert.equal(report.belowCost.length, 2, 'only the loss-making parts are reported');
+  assert.deepEqual(report.belowCost.map((b) => b.sku), ['AMTEC-1207', 'ANFHC-100-121'], 'worst margin first');
+
+  const clamp = report.belowCost.find((b) => b.sku === 'ANFHC-100-121');
+  assert.equal(clamp.sellExVat, 14.79);
+  assert.equal(clamp.cost, 22);
+  assert.equal(clamp.lossPerUnit, 7.21);
+  assert.equal(clamp.onHand, 20);
+  assert.equal(clamp.exposure, 144.2, '20 on the shelf x R7.21');
+  assert.equal(clamp.name, 'Hose Clamp');
+
+  // R1024.37 on the oil + R144.20 on the clamps
+  assert.equal(report.belowCostExposure, 1168.57);
+  assert.equal(catalogue.products.length, 3, 'nothing is held back — these are the shop\'s own prices');
+});
+
+test('a part with nothing on the shelf is reported but adds no exposure', () => {
+  const { report } = buildCatalogue(csv('ANF-X,,,,Widget,Adapter,0,EA,100,90,,,ANF-01,ACTIVE,'));
+  assert.equal(report.belowCost.length, 1);
+  assert.equal(report.belowCost['0'].lossPerUnit, 10);
+  assert.equal(report.belowCost['0'].exposure, 0);
+  assert.equal(report.belowCostExposure, 0);
+});
+
+test('a rounded 0% that still loses a cent sorts above one that loses nothing', () => {
+  const { report } = buildCatalogue(
+    csv(
+      'AT-COST,,,,At cost,Adapter,5,EA,175.75,175.75,,,ANF-01,ACTIVE,',
+      'ONE-CENT,,,,A cent under,Adapter,5,EA,430.00,429.99,,,ANF-02,ACTIVE,',
+    ),
+  );
+  assert.deepEqual(report.belowCost.map((b) => b.sku), ['ONE-CENT', 'AT-COST']);
+});
+
 test('the margin report stays out of the published catalogue', () => {
   const source = csv('TRS121-FR,,,,Fuel Rail,Adapter,5,EA,175.75,175.75,,,ANF-01,ACTIVE,');
   const { catalogue } = buildCatalogue(source);

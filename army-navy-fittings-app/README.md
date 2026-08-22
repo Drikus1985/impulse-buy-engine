@@ -59,12 +59,19 @@ The importer prints what it held back and why. **Read that output** — it is th
 4 part numbers need fixing in the price list:
   ANFAN924-3             price list gives R36.99 and R16.84 for the same part number
   ...
-13 parts sell at or below landed cost:
-  AMTEC-1207             margin -906.3%
+13 parts sell at or below landed cost, worst first:
+  part                       sell      cost  loss/unit   margin   qty    exposure  description
+  AMTEC-1207              R113.03  R1137.40   R1024.37  -906.3%     1    R1024.37  Amtec Semi Synthetic 10W40
+  ANFHC-100-121            R14.79    R22.00      R7.21   -48.7%    20     R144.20  Hose Clamp 9mm 10X16 Drakken
+  ...
+  Giving away R2087.24 if the stock on hand sells at these prices.
 ```
 
-Nothing on that list reaches the shop until it is fixed in the sheet, and the app will not pick a price when
-the price list gives two.
+Conflicting prices are **held back** — the app will not pick one when the price list gives two.
+Below-cost parts are **not** held back: the price is unambiguous and it is the shop's own, so pulling stock
+off the shop would be overriding a commercial decision rather than fixing bad data. They are reported every
+run instead, worst first, with the cash at stake so the list can be triaged rather than just noticed. That
+part of the report is derived from cost and stays in `data/import-report.json`, which is gitignored.
 
 ## Cost prices never ship
 
