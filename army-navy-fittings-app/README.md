@@ -109,12 +109,13 @@ public/
 ## Tests
 
 ```bash
-npm test     # 54 assertions
+npm test     # 57 assertions
 ```
 
 They cover the parts where a mistake costs money or sells the wrong fitting: VAT arithmetic in whole cents,
 the price-conflict and status gates, the confidentiality guard (including a simulated leak), AN size parsing
-against the part numbers it must *not* misread, cart totals, and the quote text.
+against the part numbers it must *not* misread, the below-cost report's arithmetic and ordering, cart totals,
+and the quote text.
 
 The AN size chart is checked against its own definition — every dash number must equal the tube OD in
 sixteenths of an inch.
