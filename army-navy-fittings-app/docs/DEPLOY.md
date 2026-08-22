@@ -46,15 +46,53 @@ needed either.
 
 ## A custom domain
 
-`drikus1985.github.io/impulse-buy-engine/` works, but it is not a URL to print on a business card. To serve the
-app from something like `shop.anfittings.co.za`:
+`drikus1985.github.io/impulse-buy-engine/` works, but it is not a URL to print on a business card.
+`shop.anfittings.co.za` is the natural home and is currently unused.
 
-1. At the DNS host for `anfittings.co.za`, add a `CNAME` record: `shop` -> `drikus1985.github.io`.
-2. In the repo, **Settings -> Pages -> Custom domain**, enter `shop.anfittings.co.za` and save. GitHub writes a
-   `CNAME` file and issues a certificate; tick **Enforce HTTPS** once it appears.
+**Use a subdomain, not the apex.** As of August 2026 the zone looks like this:
 
-No code change is needed. Asset paths are relative, so the app works at a domain root and in a sub-folder
-alike — which is also why the sub-path URL above works today.
+| Record | Value | What it is |
+| --- | --- | --- |
+| nameservers | `ns1.enter-system.com`, `ns2.enter-system.com` | DNS is managed at Enter System |
+| `anfittings.co.za` | A → `166.117.120.15` | the main site |
+| `www` | CNAME → `ssl.site123.com` | the main site is built on SITE123 |
+| `shop` | — | free |
+
+Pointing the apex or `www` at GitHub would take the main website down.
+
+### Order matters
+
+Do the DNS first. Setting the custom domain in GitHub before the name resolves takes the **current** site
+offline — GitHub stops serving `drikus1985.github.io/impulse-buy-engine/` and starts answering for a hostname
+that does not exist yet.
+
+1. **At Enter System**, in the DNS zone for `anfittings.co.za`, add:
+
+   | Type | Name | Value | TTL |
+   | --- | --- | --- | --- |
+   | `CNAME` | `shop` | `drikus1985.github.io.` | default |
+
+   The target is the **user** domain, not the project path — no `/impulse-buy-engine` and no `https://`.
+   Some panels want a trailing dot, some add it themselves.
+
+2. **Wait for it to resolve.** `nslookup shop.anfittings.co.za` should answer before you go on; a new record
+   is usually minutes, occasionally an hour.
+
+3. **In the repo**, Settings → Pages → Custom domain, enter `shop.anfittings.co.za`, save. GitHub re-checks
+   DNS and issues a certificate.
+
+4. **Tick Enforce HTTPS** once it stops being greyed out — the certificate takes a few more minutes. The PWA
+   will not install or work offline without it.
+
+No code change and no `CNAME` file in the repo: for a site published by Actions, the Settings field is what
+GitHub reads. Asset paths are relative, so the app works at a domain root and in a sub-folder alike.
+
+### What moves and what doesn't
+
+A browser treats `shop.anfittings.co.za` as a different origin from `drikus1985.github.io`, so anyone who has
+already installed the app or built a parts list on the old URL keeps that install and that list where it is —
+neither follows to the new domain. Nothing is lost, but it is a reason to move sooner rather than later, while
+almost nobody has installed it. The old URL redirects to the new one once the custom domain is live.
 
 ## Other hosts
 
