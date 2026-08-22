@@ -165,11 +165,16 @@ So there are **three `Family` cells** to fix alongside the part numbers, and the
 | --- | --- | --- | --- |
 | 930 | the TRS `ANFAN924-3` | `Nut` | `Bulkhead nut` |
 | 932 | the TRS `ANFAN924-8` | `Nut` | `Bulkhead nut` |
-| — | `ANFAN924-10` | `Nut` | `Bulkhead nut` |
+| 928 | `ANFAN924-10` | `Nut` | `Bulkhead nut` |
 
 Fixing those restores the AN3 / AN8 / AN10 filter chips their siblings already have.
 
-Separately, **row 931** (`ANFAN924-8`, the Kage line) is described as "Bulkhead Nut10", absorbs
+Rows 929 and 931 — the TRS `ANFAN924-12` and `-4` — carry `Nut` as well, but they are not broken today: each
+shares its number with a `Bulkhead nut` row that wins the family pick, so both publish their size. They win it
+by row order, which is the hazard the family-conflict report exists to catch. Setting them to `Bulkhead nut`
+too costs nothing and removes two entries from that list.
+
+Separately, **row 349** (`ANFAN924-8`, the Kage line) is described as "Bulkhead Nut10", absorbs
 `TRS-10-BHN`, and is priced identically to `ANFAN924-10`. It may be an AN10 part carrying the -8 number.
 That one needs someone to measure the thread on the shelf, not a data decision.
 
