@@ -175,9 +175,12 @@ export function buildCatalogue(csvText, options = {}) {
     /**
      * Parts whose selling price does not cover their landed cost. Derived from
      * cost data, so this stays in the internal report and never ships.
-     * @type {{ sku: string, marginPct: number }[]}
+     * @type {{ sku: string, name: string, sellExVat: number, cost: number,
+     *          lossPerUnit: number, onHand: number, exposure: number, marginPct: number }[]}
      */
     belowCost: [],
+    /** Total giveaway if every below-cost part on the shelf sells at its listed price. */
+    belowCostExposure: 0,
   };
 
   // Group by part number: the export has the same part on several rows when it
@@ -271,8 +274,19 @@ export function buildCatalogue(csvText, options = {}) {
       const costs = rows.map((r) => parseMoney(r['Cost R (landed/best)'])).filter((n) => Number.isFinite(n) && n > 0);
       const cost = costs.length > 0 ? Math.max(...costs) : null;
       if (cost != null && priceExVat <= cost) {
+        // Enough to act on without opening the price list: what it sells for,
+        // what it cost, what each sale gives away, and how many are on the
+        // shelf to give away. Margin alone tells you something is wrong but
+        // not whether it is worth stopping to fix.
+        const lossCents = toCents(cost) - toCents(priceExVat);
         report.belowCost.push({
           sku: partNumber,
+          name: tidyName(description),
+          sellExVat: priceExVat,
+          cost,
+          lossPerUnit: lossCents / 100,
+          onHand,
+          exposure: (lossCents * onHand) / 100,
           marginPct: Math.round(((priceExVat - cost) / priceExVat) * 1000) / 10,
         });
       }
@@ -294,6 +308,13 @@ export function buildCatalogue(csvText, options = {}) {
       enquireOnly: priceExVat == null,
     });
   }
+
+  // Worst margin first: the top of this list is where the money goes.
+  // Margin first, then the bigger per-unit loss — a rounded 0% that still gives
+  // away a cent should not sort above one that gives away nothing.
+  report.belowCost.sort((a, b) => a.marginPct - b.marginPct || b.lossPerUnit - a.lossPerUnit);
+  report.belowCostExposure =
+    Math.round(report.belowCost.reduce((sum, b) => sum + b.exposure, 0) * 100) / 100;
 
   products.sort((a, b) => a.name.localeCompare(b.name) || a.sku.localeCompare(b.sku));
 
@@ -414,8 +435,23 @@ function main() {
     for (const q of report.quarantined) console.log(`  ${q.sku.padEnd(22)} ${q.detail}`);
   }
   if (report.belowCost.length > 0) {
-    console.log(`\n${report.belowCost.length} parts sell at or below landed cost:`);
-    for (const b of report.belowCost) console.log(`  ${b.sku.padEnd(22)} margin ${b.marginPct}%`);
+    const rand = (n) => `R${n.toFixed(2)}`;
+    console.log(`\n${report.belowCost.length} parts sell at or below landed cost, worst first:`);
+    console.log(
+      `  ${'part'.padEnd(22)}${'sell'.padStart(11)}${'cost'.padStart(11)}` +
+        `${'loss/unit'.padStart(11)}${'margin'.padStart(9)}${'qty'.padStart(6)}${'exposure'.padStart(12)}  description`,
+    );
+    for (const b of report.belowCost) {
+      console.log(
+        `  ${b.sku.padEnd(22)}${rand(b.sellExVat).padStart(11)}${rand(b.cost).padStart(11)}` +
+          `${rand(b.lossPerUnit).padStart(11)}${`${b.marginPct}%`.padStart(9)}` +
+          `${String(b.onHand).padStart(6)}${rand(b.exposure).padStart(12)}  ${b.name.slice(0, 34)}`,
+      );
+    }
+    console.log(
+      `\n  Giving away ${rand(report.belowCostExposure)} if the stock on hand sells at these prices.` +
+        '\n  Prices are the shop\'s own, so nothing here is held back — fix them at source.',
+    );
   }
   console.log(`\nFull report -> ${path.relative(ROOT, reportFile)}\n`);
 }
