@@ -38,9 +38,9 @@ npm run build          # -> dist/, a static site
 npm run preview        # check the build before uploading
 ```
 
-`dist/` is plain static files. **It is already hosted** — pushing to `main` deploys it to GitHub Pages
-automatically, tests first. [docs/DEPLOY.md](docs/DEPLOY.md) covers the live URL, a custom domain, and hosting
-it elsewhere.
+`dist/` is plain static files. Pushing to `main` deploys them to GitHub Pages automatically, tests first —
+after Pages has been switched on once by hand, which the workflow is not allowed to do for itself.
+[docs/DEPLOY.md](docs/DEPLOY.md) covers that step, the live URL, a custom domain, and hosting it elsewhere.
 
 ## Updating prices
 
