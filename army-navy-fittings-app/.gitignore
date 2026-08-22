@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.local
+.DS_Store
+
+# The price list export carries landed cost, supplier codes and bin locations.
+# It stays on the machine that runs the import; only the sanitised catalogue in
+# src/data/catalogue.json is committed.
+data/source/
+data/import-report.json
