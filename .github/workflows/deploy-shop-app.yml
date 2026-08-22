@@ -1,0 +1,72 @@
+name: Deploy shop app
+
+# Publishes army-navy-fittings-app to GitHub Pages on every push to main that
+# touches it. The catalogue is committed (the price list CSV it was generated
+# from is not), so the build needs nothing but the repo.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'army-navy-fittings-app/**'
+      - '.github/workflows/deploy-shop-app.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let a newer push supersede one already queued,
+# but don't cancel a deploy that is mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: army-navy-fittings-app
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22: the tests run TypeScript through --experimental-strip-types
+      # (22.6+) and Vite 7 wants 22.12+.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: army-navy-fittings-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A shop is a bad place to find out the build was broken. The same tests
+      # CI runs on pull requests gate the deploy as well.
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # enablement: true turns Pages on for the repo the first time this runs,
+      # so there is no manual settings step.
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: army-navy-fittings-app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
