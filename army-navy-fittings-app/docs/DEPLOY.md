@@ -1,11 +1,22 @@
 # Putting it online
 
-**It is already online.** Every push to `main` that touches this folder builds the app and publishes it to
-GitHub Pages via `.github/workflows/deploy-shop-app.yml`. The workflow runs the tests first and will not
-deploy a build that fails them.
+Every push to `main` that touches this folder builds the app and publishes it to GitHub Pages via
+`.github/workflows/deploy-shop-app.yml`. The workflow runs the tests first and will not deploy a build that
+fails them.
 
-The live URL is on the repo's **Actions → Deploy shop app** run summary, and under **Settings → Pages**. For
-this repo it is `https://drikus1985.github.io/impulse-buy-engine/`.
+## One-time setup
+
+**Pages has to be switched on by hand, once.** In the repo: **Settings → Pages → Build and deployment →
+Source: GitHub Actions**. Then re-run the deploy: **Actions → Deploy shop app → Run workflow**.
+
+This step cannot be automated. The Actions `GITHUB_TOKEN` is not permitted to create a Pages site — the
+`configure-pages` action offers an `enablement: true` option for it, but the call comes back
+`Resource not accessible by integration` no matter what permissions the workflow declares. Creating a Pages
+site needs repo-admin rights that the workflow token does not get. Every deploy after that first switch is
+automatic.
+
+Once it is on, the live URL is on the **Actions → Deploy shop app** run summary and under **Settings →
+Pages**. For this repo it is `https://drikus1985.github.io/impulse-buy-engine/`.
 
 To publish a price change: update the catalogue (`npm run import`), commit `src/data/catalogue.json`, push to
 `main`. That is the whole deploy.
