@@ -181,6 +181,13 @@ export function buildCatalogue(csvText, options = {}) {
     belowCost: [],
     /** Total giveaway if every below-cost part on the shelf sells at its listed price. */
     belowCostExposure: 0,
+    /**
+     * Part numbers whose merged rows disagree about the family. Published
+     * anyway — the disagreement is the shop's to settle, not the importer's —
+     * but reported, because the winner is decided by row order.
+     * @type {{ sku: string, families: string[], chosen: string }[]}
+     */
+    familyConflicts: [],
   };
 
   // Group by part number: the export has the same part on several rows when it
@@ -248,9 +255,20 @@ export function buildCatalogue(csvText, options = {}) {
     }
 
     // --- everything else ------------------------------------------------
-    const family = rows.find((r) => r[COLUMN.family] && r[COLUMN.family] !== 'Unclassified')?.[COLUMN.family]
-      ?? rows[0][COLUMN.family]
-      ?? '';
+    // When a part number appears on several rows they can disagree about the
+    // family, and the first non-Unclassified one wins. That pick decides both
+    // the shop category and whether an AN size is claimed, so on a disagreement
+    // both are settled by nothing more than where the rows happen to sit in the
+    // export — and export order is not guaranteed stable between price runs.
+    // The part still publishes; the disagreement is reported so it can be
+    // settled in the sheet before an unrelated re-export moves it silently.
+    const familiesPresent = [
+      ...new Set(rows.map((r) => r[COLUMN.family]).filter((f) => f && f !== 'Unclassified')),
+    ];
+    const family = familiesPresent[0] ?? rows[0][COLUMN.family] ?? '';
+    if (familiesPresent.length > 1) {
+      report.familyConflicts.push({ sku: partNumber, families: familiesPresent, chosen: family });
+    }
     const legacyCodes = rows.flatMap((r) => [r['Current Sage Code'], r['Kage Code']]);
     const description = stripLegacyCode(
       bestName(rows.map((r) => r[COLUMN.description] ?? ''), partNumber),
@@ -434,6 +452,18 @@ function main() {
     console.log(`\n${report.quarantined.length} part numbers need fixing in the price list:`);
     for (const q of report.quarantined) console.log(`  ${q.sku.padEnd(22)} ${q.detail}`);
   }
+  if (report.familyConflicts.length > 0) {
+    console.log(`\n${report.familyConflicts.length} part numbers whose rows disagree about the family:`);
+    for (const f of report.familyConflicts) {
+      console.log(`  ${f.sku.padEnd(22)}${f.families.join(' / ').padEnd(40)} using "${f.chosen}"`);
+    }
+    console.log(
+      '\n  These publish, but the winner is whichever row comes first in the export, and that decides both\n' +
+        '  the shop category and whether an AN size is claimed. A re-export in a different order would move\n' +
+        '  them with no code change. Settle the family in the sheet.',
+    );
+  }
+
   if (report.belowCost.length > 0) {
     const rand = (n) => `R${n.toFixed(2)}`;
     console.log(`\n${report.belowCost.length} parts sell at or below landed cost, worst first:`);
