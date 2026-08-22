@@ -111,6 +111,44 @@ The second check has one deliberate exception. `TRS121-FR` is priced at exactly 
 itself, so matching there proves a zero margin, not a leak. That line is reported under "sell at or below
 landed cost" instead — 13 parts currently are, one at −906%.
 
+## Open: four part-number clashes
+
+Four rows in the price list carry a part number that already belongs to a different part, so the importer
+holds all of them back (see the price-conflict gate above). They are **not** pricing errors — each pair is two
+different physical products sharing one number, which the sheet's own Change Notes say outright on two of
+them: `ANF NUMBER CLASH (2 items share ANFBKRF-9034SS) — REVIEW`.
+
+| Sheet row | Number in use | Second item is | Its supplier code | Cost gap |
+| --- | --- | --- | --- | --- |
+| 930 | `ANFAN924-3` | a TRS bulkhead nut | `TRS-3-BHN` | R13.03 vs R1.94 |
+| 932 | `ANFAN924-8` | a TRS bulkhead nut | `TRS-8-BHN` | R15.03 vs R2.78 |
+| 1180 | `ANFBKRF-9034SS` | a GB-sourced hose end | `GBBKRF-9034SS` | R167.83 vs R181.50 |
+| 1266 | `ANFW0611-A` | Alloy AN Spanner set 02 | `GBW0611-A` | R1 056.76 vs R813.49 |
+
+The numbering rule is strip the supplier prefix and prepend `ANF` — `KJBKRF-9034SS` and `GBBKRF-9034SS` both
+reduce to `ANFBKRF-9034SS`, which is exactly how the two collisions arose. Three of the five GB-sourced parts
+have no KJ counterpart and so numbered cleanly.
+
+**Every AN part must keep an ANF part number**, so the second item needs a new ANF number rather than
+reverting to its supplier code. Proposed, and verified free against all 1,478 existing numbers:
+
+| Sheet row | Proposed |
+| --- | --- |
+| 930 | `ANFAN924-3B` |
+| 932 | `ANFAN924-8B` |
+| 1180 | `ANFBKRF-9034SSB` |
+| 1266 | `ANFW0611-B` — the Kage row is already `-A` ("Spanner set 01") |
+
+Awaiting a decision on the suffix: a trailing `B`, or something that names the source (`-GB`, `-TRS`). A
+trailing `B` is also used in this sheet as a finish marker for black, e.g. `ANPTFESSB-06`.
+
+Separately, **row 931** (`ANFAN924-8`, the Kage line) is described as "Bulkhead Nut10", absorbs
+`TRS-10-BHN`, and is priced identically to `ANFAN924-10`. It may be an AN10 part carrying the -8 number.
+That one needs someone to measure the thread on the shelf, not a data decision.
+
+Once the numbers are settled, `npm run import` should report **0 conflicting prices** and the catalogue should
+rise from 1,260 to 1,264 products.
+
 ## Known limits
 
 - **Descriptions are the shop's.** Some are blank, some repeat the part number, some are shouted. The importer
