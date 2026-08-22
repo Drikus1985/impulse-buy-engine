@@ -1,14 +1,31 @@
 # Putting it online
 
+**It is already online.** Every push to `main` that touches this folder builds the app and publishes it to
+GitHub Pages via `.github/workflows/deploy-shop-app.yml`. The workflow runs the tests first and will not
+deploy a build that fails them.
+
+The live URL is on the repo's **Actions → Deploy shop app** run summary, and under **Settings → Pages**. For
+this repo it is `https://drikus1985.github.io/impulse-buy-engine/`.
+
+To publish a price change: update the catalogue (`npm run import`), commit `src/data/catalogue.json`, push to
+`main`. That is the whole deploy.
+
+To redeploy without a code change — **Actions → Deploy shop app → Run workflow**.
+
+The rest of this page covers hosting it somewhere else, and the custom-domain step.
+
+## Building it yourself
+
 `npm run build` produces `dist/` — static HTML, CSS, JavaScript and icons. There is no server, no database and
 no API key, so anything that serves files will host it.
 
 ```bash
 npm ci
-npm run icons
-npm run import      # needs data/source/anf-pricelist.csv
 npm run build
 ```
+
+`npm run import` is only needed when prices have changed — the catalogue it produces is committed, so a plain
+checkout builds without the price list present. The icons are committed too.
 
 Upload the **contents** of `dist/`.
 
@@ -16,7 +33,19 @@ Asset paths are relative, so the app works both at a domain root and in a sub-fo
 (`anfittings.co.za/app/`). Routing is hash-based (`#/reference`), which means no server rewrite rules are
 needed either.
 
-## Options
+## A custom domain
+
+`drikus1985.github.io/impulse-buy-engine/` works, but it is not a URL to print on a business card. To serve the
+app from something like `shop.anfittings.co.za`:
+
+1. At the DNS host for `anfittings.co.za`, add a `CNAME` record: `shop` -> `drikus1985.github.io`.
+2. In the repo, **Settings -> Pages -> Custom domain**, enter `shop.anfittings.co.za` and save. GitHub writes a
+   `CNAME` file and issues a certificate; tick **Enforce HTTPS** once it appears.
+
+No code change is needed. Asset paths are relative, so the app works at a domain root and in a sub-folder
+alike — which is also why the sub-path URL above works today.
+
+## Other hosts
 
 **Netlify or Cloudflare Pages** — drag `dist/` onto the dashboard, or point it at the repo with build command
 `npm run build` and publish directory `dist`. Both give HTTPS on a subdomain immediately, and a custom domain
@@ -24,8 +53,6 @@ in a few clicks. Free for this size of site.
 
 **Existing hosting.** If anfittings.co.za already has cPanel or FTP, upload `dist/` into a folder such as
 `/public_html/app/`. Nothing else on the site is touched.
-
-**GitHub Pages.** Push `dist/` to a `gh-pages` branch. Works because paths are relative.
 
 ## HTTPS is required
 
@@ -50,6 +77,8 @@ The WhatsApp handoff uses `wa.me/27105921706`, from `SHOP` in `src/lib/shop.ts`.
 enquiries should land somewhere else, and rebuild.
 
 ## Redeploying after a price change
+
+On GitHub Pages this is just `npm run import`, commit the catalogue, push. Hosting it yourself:
 
 ```bash
 npm run import && npm run build

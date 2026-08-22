@@ -38,7 +38,9 @@ npm run build          # -> dist/, a static site
 npm run preview        # check the build before uploading
 ```
 
-`dist/` is plain static files. [docs/DEPLOY.md](docs/DEPLOY.md) covers hosting.
+`dist/` is plain static files. **It is already hosted** — pushing to `main` deploys it to GitHub Pages
+automatically, tests first. [docs/DEPLOY.md](docs/DEPLOY.md) covers the live URL, a custom domain, and hosting
+it elsewhere.
 
 ## Updating prices
 
@@ -47,8 +49,9 @@ The catalogue is generated from the shop's price list, not edited by hand.
 ```bash
 # export the pricing sheet as CSV to data/source/anf-pricelist.csv, then
 npm run import
-npm run build
 ```
+
+Commit the regenerated `src/data/catalogue.json` and push to `main` — that publishes it.
 
 The importer prints what it held back and why. **Read that output** — it is the shop's data-quality report:
 
