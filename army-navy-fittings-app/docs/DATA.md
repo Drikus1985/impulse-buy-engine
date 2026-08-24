@@ -47,6 +47,15 @@ fixed at source.
 `npm run import -- --include-review` publishes `REVIEW` lines too, if the shop decides that stock is worth
 listing. It is off by default because the safe direction is to under-list.
 
+**Family disagreements are reported, not gated.** Where a part number appears on several rows that disagree
+about the `Family`, the first non-`Unclassified` one wins — and that single pick drives both the shop category
+and whether an AN size is claimed. The part still publishes, because the disagreement is the shop's to settle
+and holding back real stock costs more than it saves. But the winner is decided by **row order in the export**,
+which is not guaranteed stable: a sort, an inserted line or a different export path could move a part between
+categories on the next price run, with no code change and nothing in the diff to explain it. So every run
+lists them. 14 part numbers currently disagree — the `ANFAN833-*` and `ANFAN832-*` series, and two of the
+`ANFAN924-*` nuts.
+
 Parts with **no** price are still listed, as "Price on request" — hiding stock the shop has is worse than
 asking someone to ring for a price.
 
@@ -140,9 +149,32 @@ reverting to its supplier code. Proposed, and verified free against all 1,478 ex
 | 1266 | `ANFW0611-B` — the Kage row is already `-A` ("Spanner set 01") |
 
 Awaiting a decision on the suffix: a trailing `B`, or something that names the source (`-GB`, `-TRS`). A
-trailing `B` is also used in this sheet as a finish marker for black, e.g. `ANPTFESSB-06`.
+trailing `B` is also used in this sheet as a finish marker for black, e.g. `ANPTFESSB-06`, which is the
+argument for putting the letter before the dash instead — `ANFAN924B-3`. Both parse identically; the position
+only affects how a human reads it.
 
-Separately, **row 931** (`ANFAN924-8`, the Kage line) is described as "Bulkhead Nut10", absorbs
+**The suffix is not what decides whether these keep an AN size.** Rows 930 and 932 carry `Family` = `Nut`,
+and `Nut` is not an AN family, so no part-number scheme claims a size for them once they are split off. Today
+they inherit an AN family only because they are merged with a `Bulkhead`/`Bulkhead nut` row. Their siblings
+show the same pattern: `ANFAN924-4` and `-12` publish AN4 and AN12 because each is merged with a
+`Bulkhead nut` row, while `ANFAN924-10` — alone on `Nut` — publishes no size at all.
+
+So there are **three `Family` cells** to fix alongside the part numbers, and they are the lever:
+
+| Sheet row | Part | `Family` now | Should be |
+| --- | --- | --- | --- |
+| 930 | the TRS `ANFAN924-3` | `Nut` | `Bulkhead nut` |
+| 932 | the TRS `ANFAN924-8` | `Nut` | `Bulkhead nut` |
+| 928 | `ANFAN924-10` | `Nut` | `Bulkhead nut` |
+
+Fixing those restores the AN3 / AN8 / AN10 filter chips their siblings already have.
+
+Rows 929 and 931 — the TRS `ANFAN924-12` and `-4` — carry `Nut` as well, but they are not broken today: each
+shares its number with a `Bulkhead nut` row that wins the family pick, so both publish their size. They win it
+by row order, which is the hazard the family-conflict report exists to catch. Setting them to `Bulkhead nut`
+too costs nothing and removes two entries from that list.
+
+Separately, **row 349** (`ANFAN924-8`, the Kage line) is described as "Bulkhead Nut10", absorbs
 `TRS-10-BHN`, and is priced identically to `ANFAN924-10`. It may be an AN10 part carrying the -8 number.
 That one needs someone to measure the thread on the shelf, not a data decision.
 

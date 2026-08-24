@@ -306,6 +306,50 @@ test('a rounded 0% that still loses a cent sorts above one that loses nothing', 
   assert.deepEqual(report.belowCost.map((b) => b.sku), ['ONE-CENT', 'AT-COST']);
 });
 
+test('a family disagreement is reported, and the part still publishes', () => {
+  const { catalogue, report } = buildCatalogue(
+    csv(
+      'ANFAN924-4,,,,Bulkhead Nut4,Bulkhead nut,23,EA,8.2,16.84,,,ANF-01,ACTIVE,',
+      'ANFAN924-4,,,,Bulk Head Nuts,Nut,16,EA,1.94,16.84,,,ANF-02,ACTIVE,',
+      'ANF-AGREE,,,,Fine part,Adapter,5,EA,10,50,,,ANF-03,ACTIVE,',
+    ),
+  );
+
+  assert.equal(report.familyConflicts.length, 1, 'only the disagreeing part is reported');
+  assert.equal(report.familyConflicts['0'].sku, 'ANFAN924-4');
+  assert.deepEqual(report.familyConflicts['0'].families, ['Bulkhead nut', 'Nut']);
+  assert.equal(report.familyConflicts['0'].chosen, 'Bulkhead nut', 'the first row in the export wins');
+
+  // Reported, not held back — and the winning family is what drives the size.
+  const part = catalogue.products.find((p) => p.sku === 'ANFAN924-4');
+  assert.equal(part.family, 'Bulkhead nut');
+  assert.deepEqual(part.sizes, [4], 'Bulkhead nut is an AN family, so AN4 is claimed');
+});
+
+test('reversing the rows reverses the winner — which is the point of reporting it', () => {
+  const rows = [
+    'ANFAN924-4,,,,Bulk Head Nuts,Nut,16,EA,1.94,16.84,,,ANF-02,ACTIVE,',
+    'ANFAN924-4,,,,Bulkhead Nut4,Bulkhead nut,23,EA,8.2,16.84,,,ANF-01,ACTIVE,',
+  ];
+  const { catalogue, report } = buildCatalogue(csv(...rows));
+  assert.equal(report.familyConflicts['0'].chosen, 'Nut');
+  const part = catalogue.products.find((p) => p.sku === 'ANFAN924-4');
+  assert.equal(part.family, 'Nut');
+  assert.deepEqual(part.sizes, [], 'Nut is not an AN family, so the size is lost on a re-order alone');
+});
+
+test('rows that agree on the family are not reported', () => {
+  const { report } = buildCatalogue(
+    csv(
+      'ANF-SAME,,,,One,Adapter,5,EA,10,50,,,ANF-01,ACTIVE,',
+      'ANF-SAME,,,,Two,Adapter,5,EA,10,50,,,ANF-02,ACTIVE,',
+      'ANF-BLANK,,,,Three,Adapter,5,EA,10,50,,,ANF-03,ACTIVE,',
+      'ANF-BLANK,,,,Four,Unclassified,5,EA,10,50,,,ANF-04,ACTIVE,',
+    ),
+  );
+  assert.equal(report.familyConflicts.length, 0, 'Unclassified is not a competing opinion');
+});
+
 test('the margin report stays out of the published catalogue', () => {
   const source = csv('TRS121-FR,,,,Fuel Rail,Adapter,5,EA,175.75,175.75,,,ANF-01,ACTIVE,');
   const { catalogue } = buildCatalogue(source);
